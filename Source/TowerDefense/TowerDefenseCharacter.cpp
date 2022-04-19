@@ -119,20 +119,23 @@ void ATowerDefenseCharacter::getDamaged(float value)
 
 void ATowerDefenseCharacter::Shoot()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Shot"));
+	GetWorld()->SpawnActor<AProjectile>(BPProjectile, GetActorLocation(), FollowCamera->GetComponentRotation());
+	SetActorRotation({ 0.0, FollowCamera->GetComponentRotation().Yaw, 0.0 });
+	
+	//UE_LOG(LogTemp, Warning, TEXT("Shot"));
 
-	FRotator CameraRotation = { 0.0, 0.0, 0.0 };
-	CameraRotation.Add(0.0, FollowCamera->GetComponentRotation().Yaw, 0.0);
-	SetActorRotation(CameraRotation);
+	//FRotator CameraRotation = { 0.0, 0.0, 0.0 };
+	//CameraRotation.Add(0.0, FollowCamera->GetComponentRotation().Yaw, 0.0);
+	//SetActorRotation(CameraRotation);
 
 
-	FTransform SpawnTransform = GetActorTransform();
-	SpawnTransform.SetLocation(FollowCamera->GetComponentRotation().Vector() * 200.f + GetActorLocation());
-	//SpawnTransform.SetRotation(FollowCamera->GetComponentRotation().Quaternion());
+	//FTransform SpawnTransform = GetActorTransform();
+	//SpawnTransform.SetLocation(FollowCamera->GetComponentRotation().Vector() * 200.f + GetActorLocation());
+	////SpawnTransform.SetRotation(FollowCamera->GetComponentRotation().Quaternion());
 
-	FActorSpawnParameters SpawnParams;
+	//FActorSpawnParameters SpawnParams;
 
-	GetWorld()->SpawnActor<AProjectile>(BPProjectile, SpawnTransform, SpawnParams);
+	//GetWorld()->SpawnActor<AProjectile>(BPProjectile, SpawnTransform, SpawnParams);
 }
 
 void ATowerDefenseCharacter::placeTower()
