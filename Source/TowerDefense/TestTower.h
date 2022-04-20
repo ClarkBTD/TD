@@ -17,12 +17,22 @@ public:
 	
 	UPROPERTY(EditAnywhere)
 		class UBoxComponent* RootBox;
+	UPROPERTY(EditAnywhere)
+		class UBoxComponent* PlaceBox;
+	UPROPERTY(EditAnywhere)
+		class UMaterialInterface* HoloGreen;
+	UPROPERTY(EditAnywhere)
+		class UMaterialInterface* HoloRed;
+	UPROPERTY(EditAnywhere)
+		class UMaterialInterface* HoloYellow;
+	UPROPERTY(EditAnywhere)
+		class UMaterialInterface* BaseInterface;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component")
 		class UStaticMeshComponent* TowerMesh;
 	UPROPERTY(EditAnywhere)
 		class UCapsuleComponent* HitBox;
 	UPROPERTY(EditAnywhere)
-		class USphereComponent* LOSBox;
+		class UStaticMeshComponent* LOSCone;
 	UPROPERTY(EditAnywhere)
 		class USphereComponent* shootPoint;
 	UPROPERTY(EditAnywhere, Category = "Enemy")
@@ -41,15 +51,17 @@ public:
 
 	float getHealth();
 
+	bool isBeingPlaced = false;
+
 	void getDamaged(float value);
 
 	float getMaxHealth();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float health = 100;
+		float health = 500;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float maxHealth = 100;
+		float maxHealth = 500;
 	
 
 protected:
@@ -72,10 +84,19 @@ public:
 	UFUNCTION()
 		void OnEnter(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Hit);
 
+	bool canBePlaced = true;
+
 	UFUNCTION()
 		void OnExit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+		void OnPlaceEnter(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Hit);
+	UFUNCTION()
+		void OnPlaceExit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 	void Shoot(FTransform direction);
+
+	
 
 	int loopCount = 0;
 

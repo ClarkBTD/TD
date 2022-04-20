@@ -27,6 +27,8 @@ AEnemyAI::AEnemyAI()
 	DamageCollision->SetupAttachment(GetRootComponent());
 	rootBox->SetupAttachment(GetRootComponent());
 
+	
+
 	HealthWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
 
 	HealthWidgetComp->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
@@ -46,6 +48,8 @@ void AEnemyAI::BeginPlay()
 
 	
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWaypoint::StaticClass(), Waypoints);
+
+	PlayerClass = UGameplayStatics::GetActorOfClass(GetWorld(), ATowerDefenseCharacter::StaticClass());
 
 	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATestKeep::StaticClass(), Keeps);
 
@@ -88,7 +92,7 @@ void AEnemyAI::Tick(float DeltaTime)
 		{
 			shotTimer = 0;
 			//UE_LOG(LogTemp, Warning, TEXT("currently beating this dude up"));
-			targetTower->getDamaged(10.f);
+			targetTower->getDamaged(1.f);
 		}
 		
 		shotTimer += DeltaTime;
@@ -129,10 +133,13 @@ void AEnemyAI::DealDamage(float DamageAmount)
 
 	if (health <= 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("tryna get paid"));
-		//ATowerDefenseCharacter* temp = Cast<ATowerDefenseCharacter>(BPPlayer);
-		BPPlayer.GetDefaultObject()->addMoney(100.f);
-		UE_LOG(LogTemp, Warning, TEXT("tryna get paid"));
+		//UE_LOG(LogTemp, Warning, TEXT("tryna get paid"));
+		ATowerDefenseCharacter* temp = Cast<ATowerDefenseCharacter>(PlayerClass);
+		if (temp)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("tryna get paid"));
+			temp->addMoney(100.f);
+		}
 		Destroy();
 	}
 }

@@ -32,6 +32,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player")
 		TSubclassOf<class ATowerDefenseCharacter> BPPlayer;
 
+	UPROPERTY(EditAnywhere, Category = "PlayerClass")
+		class AActor* PlayerClass;
+
 	void DealDamage(float DamageAmount);
 
 	float getHealth();
@@ -50,10 +53,10 @@ public:
 		float attackSpeed = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float health = 1000;
+		float health = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		float maxHealth = 1000;
+		float maxHealth = 100;
 
 	UPROPERTY(EditAnywhere)
 		class UBoxComponent* rootBox;

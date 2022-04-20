@@ -8,8 +8,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Engine/World.h"
 #include "Projectile.h"
 #include "InGameHUD.h"
+#include "TestTower.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -50,6 +52,12 @@ ATowerDefenseCharacter::ATowerDefenseCharacter()
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
 
+void ATowerDefenseCharacter::confirmPlacement()
+{
+
+
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -63,6 +71,7 @@ void ATowerDefenseCharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 	PlayerInputComponent->BindAction("PlaceTower", IE_Pressed, this, &ATowerDefenseCharacter::placeTower);
 
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &ATowerDefenseCharacter::Shoot);
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &ATowerDefenseCharacter::confirmPlacement);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ATowerDefenseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ATowerDefenseCharacter::MoveRight);
@@ -106,6 +115,62 @@ void ATowerDefenseCharacter::Tick(float DeltaSeconds)
 		InGameHUD->UpdateMoney(money);
 		
 	}
+
+	if (placing == true)
+	{
+		//Hit contains information about what the raycast hit.
+		FHitResult Hit;
+
+		float RayLength = 5000;
+
+		//The Origin of the raycast
+		FVector StartLocation = FollowCamera->GetComponentLocation();
+
+
+		
+			//The EndLocation of the raycast
+			FVector EndLocation = FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * RayLength);
+
+			//Collision parameters. The following syntax means that we don't want the trace to be complex
+			FCollisionQueryParams CollisionParameters;
+
+			CollisionParameters.AddIgnoredActor(this);
+
+
+			//Perform the line trace
+			//The ECollisionChannel parameter is used in order to determine what we are looking for when performing the raycast
+			//ActorLineTraceSingle(Hit, StartLocation, EndLocation, ECollisionChannel::ECC_Visibility, CollisionParameters);
+
+			//DrawDebugLine is used in order to see the raycast we performed
+			//The boolean parameter used here means that we want the lines to be persistent so we can see the actual raycast
+			//The last parameter is the width of the lines.
+			//DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, false, 0.1, 0, 1.f);
+
+			AActor* Tower = Cast<AActor>(this->BPPlaceTower);
+
+			TArray<AActor*> SomeActors;
+			SomeActors.Add(Tower);
+			SomeActors.Add(this);
+			SomeActors.Add(PlaceTower);
+
+			UKismetSystemLibrary::LineTraceSingle(this, StartLocation, EndLocation, UEngineTypes::ConvertToTraceType(ECC_WorldDynamic), false, SomeActors, EDrawDebugTrace::None, Hit, true);
+
+			ATestTower* Place = Cast<ATestTower>(PlaceTower);
+			if (Place)
+			{
+
+				if (Hit.GetActor())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Cast is successful??"));
+					Place->SetActorLocation(Hit.Location);
+					Place->SetActorRotation({ 0.f, FollowCamera->GetComponentRotation().Yaw, 0.f });
+				}
+				
+			}
+			
+
+	}
+	
 }
 
 void ATowerDefenseCharacter::getDamaged(float value)
@@ -119,38 +184,67 @@ void ATowerDefenseCharacter::getDamaged(float value)
 
 void ATowerDefenseCharacter::Shoot()
 {
-	GetWorld()->SpawnActor<AProjectile>(BPProjectile, GetActorLocation(), FollowCamera->GetComponentRotation());
-	SetActorRotation({ 0.0, FollowCamera->GetComponentRotation().Yaw, 0.0 });
-	
-	//UE_LOG(LogTemp, Warning, TEXT("Shot"));
+	if (placing == false)
+	{
+		GetWorld()->SpawnActor<AProjectile>(BPProjectile, GetActorLocation(), FollowCamera->GetComponentRotation());
+		SetActorRotation({ 0.0, FollowCamera->GetComponentRotation().Yaw, 0.0 });
 
-	//FRotator CameraRotation = { 0.0, 0.0, 0.0 };
-	//CameraRotation.Add(0.0, FollowCamera->GetComponentRotation().Yaw, 0.0);
-	//SetActorRotation(CameraRotation);
+		//UE_LOG(LogTemp, Warning, TEXT("Shot"));
+
+		//FRotator CameraRotation = { 0.0, 0.0, 0.0 };
+		//CameraRotation.Add(0.0, FollowCamera->GetComponentRotation().Yaw, 0.0);
+		//SetActorRotation(CameraRotation);
 
 
-	//FTransform SpawnTransform = GetActorTransform();
-	//SpawnTransform.SetLocation(FollowCamera->GetComponentRotation().Vector() * 200.f + GetActorLocation());
-	////SpawnTransform.SetRotation(FollowCamera->GetComponentRotation().Quaternion());
+		//FTransform SpawnTransform = GetActorTransform();
+		//SpawnTransform.SetLocation(FollowCamera->GetComponentRotation().Vector() * 200.f + GetActorLocation());
+		////SpawnTransform.SetRotation(FollowCamera->GetComponentRotation().Quaternion());
 
-	//FActorSpawnParameters SpawnParams;
+		//FActorSpawnParameters SpawnParams;
 
-	//GetWorld()->SpawnActor<AProjectile>(BPProjectile, SpawnTransform, SpawnParams);
+		//GetWorld()->SpawnActor<AProjectile>(BPProjectile, SpawnTransform, SpawnParams);
+	}
 }
 
 void ATowerDefenseCharacter::placeTower()
 {
-
- AInGameHUD* InGameHUD = Cast<AInGameHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
-
-	if (InGameHUD)
+	if (money >= towerPlaceCost)
 	{
-		if (money > 0)
+		if (placing == false)
 		{
-			money = money - 100;
-			InGameHUD->UpdateMoney(money);
+			placing = true;
+
+			FActorSpawnParameters Params;
+			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			PlaceTower = GetWorld()->SpawnActor<ATestTower>(BPPlaceTower, GetActorLocation(), { 0.f, FollowCamera->GetComponentRotation().Yaw, 0.f }, Params);
+
+			PlaceTower->isBeingPlaced = true;
+			PlaceTower->TowerMesh->SetMaterial(0, PlaceTower->HoloGreen);
+
+			UE_LOG(LogTemp, Warning, TEXT("Should have just spawned a tower at the players location"));\
+
 		}
+		else
+		{
+			AInGameHUD* InGameHUD = Cast<AInGameHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+
+			if (InGameHUD)
+			{
+				if (money > 0)
+				{
+					money = money - towerPlaceCost;
+					InGameHUD->UpdateMoney(money);
+				}
+			}
+			placing = false;
+			PlaceTower->TowerMesh->SetMaterial(0, PlaceTower->BaseInterface);
+			PlaceTower->isBeingPlaced = false;
+		}
+
+	
 	}
+
 
 }
 

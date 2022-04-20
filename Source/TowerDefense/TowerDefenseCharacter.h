@@ -24,6 +24,10 @@ class ATowerDefenseCharacter : public ACharacter
 public:
 	ATowerDefenseCharacter();
 
+	bool placing = false;
+
+	void confirmPlacement();
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -77,10 +81,19 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Shooting")
 		TSubclassOf<class AProjectile> BPProjectile;
 
+	UPROPERTY(EditAnywhere, Category = "Tower")
+		TSubclassOf<class ATestTower> BPPlaceTower;
+
+	UPROPERTY(EditAnywhere, Category = "Tower")
+		class ATestTower* PlaceTower;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Money)
+		float towerPlaceCost = 500.f;
+
 	virtual void Tick(float DeltaSeconds) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Money)
-	int money = 500;
+	float money = 500.f;
 
 	void getDamaged(float value);
 
